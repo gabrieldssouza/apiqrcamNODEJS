@@ -1,17 +1,15 @@
 const mysql = require('mysql2');
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
     host: 'mysql.infocimol.com.br',
     user: 'infocimol07',
     password: 'qrcam123',
-    database: 'infocimol07'
+    database: 'infocimol07',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect((err) => {
-    if (err) {
-        console.error('Erro ao conectar no banco de dados: ' + err);
-        return;
-    }
-});
+const db = pool.promise();
 
 module.exports = db;
