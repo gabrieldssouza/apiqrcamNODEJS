@@ -2,7 +2,7 @@ const db = require('./db');
 
 async function criarBem(nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, qrcode) {
     const bemValues = [nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, qrcode];
-    const bemSql = `INSERT INTO bem (nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local, qrcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const bemSql = `INSERT INTO bem (nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, qrcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     return new Promise((resolve, reject) => {
         db.query(bemSql, bemValues, (err, results) => {
@@ -14,6 +14,74 @@ async function criarBem(nome, codigo, numero, estado_conservacao, valor_aquisica
 
             console.log('Bem cadastrado com sucesso');
             resolve(results.insertId);
+        });
+    });
+}
+
+
+
+async function adcionarBemLevantamento(bem_idbem, Levantamento_idLevantamento) {
+    const values = [bem_idbem, Levantamento_idLevantamento];
+    const bemSql = `INSERT INTO bem_has_Levantamento (bem_idbem, Levantamento_idLevantamento) VALUES (?, ?)`;
+
+    return new Promise((resolve, reject) => {
+        db.query(bemSql, values, (err, results) => {
+            if (err) {
+                console.log(err);
+                reject('Erro ao cadastrar bem levantamento');
+                return;
+            }
+
+            console.log('id levantamento feito com sucesso ');
+            resolve(results);
+        });
+    });
+}
+
+
+async function adcionarLevantamento(idLevantamento, data_hora, responsavel, ano) {
+    const values = [idLevantamento, data_hora, responsavel, ano];
+    const bemSql = `INSERT INTO levantamento (idLevantamento, data_hora, responsavel, ano) VALUES (?, ?, ?, ?)`;
+
+    return new Promise((resolve, reject) => {
+        db.query(bemSql, values, (err, results) => {
+            if (err) {
+                console.log(err);
+                reject('Erro ao cadastrar levantamento');
+                return;
+            }
+
+            console.log('cadastrar levantamento feito com sucesso ');
+            resolve(results);
+        });
+    });
+}
+
+async function listarLevantamento() {
+    const bemSql = `SELECT * FROM levantamento`;
+    return new Promise((resolve, reject) => {
+        db.query(bemSql, (err, results) => {
+            if (err) {
+                console.log(err);
+                reject('Erro ao listar levantamentos');
+            }
+
+            resolve(results);
+        });
+    });
+}
+
+
+async function listarBensLevantamento() {
+    const bemSql = `SELECT * FROM bem_has_levantamento`;
+    return new Promise((resolve, reject) => {
+        db.query(bemSql, (err, results) => {
+            if (err) {
+                console.log(err);
+                reject('Erro ao listar bens de levantamento');
+            }
+
+            resolve(results);
         });
     });
 }
@@ -32,6 +100,8 @@ async function listarBens() {
         });
     });
 }
+
+
 
 async function listarLocais() {
     const bemSql = 'SELECT * FROM local';
@@ -75,7 +145,7 @@ async function listarBensDeCategoria(idCategoria) {
 }
 
 async function listarBensDeLocais(idlocal) {
-    const bemSql = 'SELECT * FROM bem WHERE local_idlocal = ?';
+    const bemSql = 'SELECT * FROM bem WHERE local_idLocais = ?';
 
     return new Promise((resolve, reject) => {
         db.query(bemSql, [idlocal], (err, results) => {
@@ -165,4 +235,6 @@ async function atualizarQrCode(idbem, qrcode) {
     });
 }
 
-module.exports = { criarBem, listarBens, editarBem, listarBem, atualizarQrCode, listarBemDeEstado, listarBensDeLocais, listarBensDeCategoria, listarCategorias, listarLocais };
+module.exports = { criarBem, listarBens, editarBem, listarBem, atualizarQrCode, listarBemDeEstado,
+     listarBensDeLocais, listarBensDeCategoria, listarCategorias, listarLocais, adcionarBemLevantamento, 
+     listarBensLevantamento, adcionarLevantamento, listarLevantamento};
