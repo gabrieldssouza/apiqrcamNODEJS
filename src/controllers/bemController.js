@@ -25,35 +25,48 @@ exports.adcionarLevantamento = async (req,res) => {
     }
 }
 
-
-
 exports.criarBem = async (req, res) => {
-  const { nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local } = req.body;
+    try {
+        console.log('Dados recebidos:', req.body);
+        console.log('Arquivo recebido:', req.file);
 
-  try {
-    const idbem = await bemModel.criarBem(nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local);
+        const { nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local } = req.body;
+        const foto = req.file ? req.file.filename : null;
 
-    let newData = {
-      idbem,
-      nome,
-      numero,
-      codigo,
-      data_aquisicao,
-      valor_aquisicao,
-      estado_conservacao,
-      categoria_idCategoria,
-      local
-    };
+        if (!nome || !codigo || !numero || !estado_conservacao || !local || !categoria_idCategoria) {
+            return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios.' });
+        }
 
-    const qrcode = await QRCode.toDataURL(JSON.stringify(newData));
+        const fotoUrl = foto ? `${req.protocol}://${req.get('host')}/uploads/${foto}` : null;
 
-    await bemModel.atualizarQrCode(idbem, qrcode);
+        console.log('URL da foto:', fotoUrl);
 
-    res.status(201).json({ message: 'Bem criado com sucesso', qrcode: qrcode, idbem: idbem });
-  } catch (error) {
-    console.error('Erro ao gerar QR code:', error);
-    res.status(500).json({ message: 'Erro ao gerar QR code' });
-  }
+        const idbem = await bemModel.criarBem(nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local, fotoUrl);
+
+        let newData = {
+            idbem,
+            nome,
+            numero,
+            codigo,
+            estado_conservacao,
+            valor_aquisicao,
+            data_aquisicao,
+            categoria_idCategoria,
+            local,
+            fotoUrl
+        };
+
+        console.log("FOTO:"+ foto);
+
+        const qrcode = await QRCode.toDataURL(JSON.stringify(newData));
+
+        await bemModel.atualizarQrCode(idbem, qrcode);
+
+        res.status(201).json({ message: 'Bem criado com sucesso', bem: newData });
+    } catch (error) {
+        console.error('Erro ao criar bem:', error);
+        res.status(500).json({ error: 'Erro ao criar bem' });
+    }
 };
 
 exports.listarBens = async (req, res) => {

@@ -1,8 +1,8 @@
 const db = require('./db');
 
-async function criarBem(nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, qrcode) {
-    const bemValues = [nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, qrcode];
-    const bemSql = `INSERT INTO bem (nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, qrcode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+async function criarBem(nome, codigo, numero, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local, fotoUrl) {
+    const bemValues = [nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, fotoUrl];
+    const bemSql = `INSERT INTO bem (nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     return new Promise((resolve, reject) => {
         db.query(bemSql, bemValues, (err, results) => {
@@ -17,8 +17,6 @@ async function criarBem(nome, codigo, numero, estado_conservacao, valor_aquisica
         });
     });
 }
-
-
 
 async function adcionarBemLevantamento(bem_idbem, Levantamento_idLevantamento) {
     const values = [bem_idbem, Levantamento_idLevantamento];
