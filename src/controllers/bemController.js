@@ -1,39 +1,15 @@
 const bemModel = require('../models/bemModel');
 const QRCode = require('qrcode');
 
-exports.adcionarBemLevantamento = async (req,res) => {
-    const {bem_idbem, Levantamento_idLevantamento} = req.body;
-
-    try {
-        const bem = await bemModel.adcionarBemLevantamento(bem_idbem, Levantamento_idLevantamento);
-        res.status(200).send(bem);
-    } catch (erro) {
-        console.error('Erro no controlador:', erro);
-        res.status(500).send('Erro ao adicionar bem ao levantamento');
-    }
-}
-
-exports.adcionarLevantamento = async (req,res) => {
-    const {idLevantamento, data_hora, responsavel, ano} = req.body;
-
-    try {
-        const bem = await bemModel.adcionarLevantamento(idLevantamento, data_hora, responsavel, ano);
-        res.status(200).send(bem);
-    } catch (erro) {
-        console.error('Erro no controlador:', erro);
-        res.status(500).send('Erro ao adicionar levantamento');
-    }
-}
-
 exports.criarBem = async (req, res) => {
     try {
         console.log('Dados recebidos:', req.body);
         console.log('Arquivo recebido:', req.file);
 
-        const { nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local } = req.body;
+        const { nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais } = req.body;
         const foto = req.file ? req.file.filename : null;
 
-        if (!nome || !codigo || !numero || !estado_conservacao || !local || !categoria_idCategoria) {
+        if (!nome || !codigo || !numero || !estado_conservacao || !local_idLocais || !categoria_idCategoria) {
             return res.status(400).json({ error: 'Por favor, preencha todos os campos obrigatórios.' });
         }
 
@@ -41,7 +17,7 @@ exports.criarBem = async (req, res) => {
 
         console.log('URL da foto:', fotoUrl);
 
-        const idbem = await bemModel.criarBem(nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local, fotoUrl);
+        const idbem = await bemModel.criarBem(nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local_idLocais, fotoUrl);
 
         let newData = {
             idbem,
@@ -52,7 +28,7 @@ exports.criarBem = async (req, res) => {
             valor_aquisicao,
             data_aquisicao,
             categoria_idCategoria,
-            local,
+            local_idLocais,
             fotoUrl
         };
 
@@ -78,6 +54,27 @@ exports.listarBens = async (req, res) => {
     }
 }
 
+exports.adcionarBemLevantamento = async (req,res) => {
+    const {bem_idbem, Levantamento_idLevantamento} = req.body;
+    try {
+        const bem = await bemModel.adcionarBemLevantamento(bem_idbem, Levantamento_idLevantamento);
+        res.status(200).send(bem);
+    } catch (erro) {
+        console.error('Erro no controlador:', erro);
+        res.status(500).send('Erro ao adicionar bem ao levantamento');
+    }
+}
+exports.adcionarLevantamento = async (req,res) => {
+    const {idLevantamento, data_hora, responsavel, ano} = req.body;
+    try {
+        const bem = await bemModel.adcionarLevantamento(idLevantamento, data_hora, responsavel, ano);
+        res.status(200).send(bem);
+    } catch (erro) {
+        console.error('Erro no controlador:', erro);
+        res.status(500).send('Erro ao adicionar levantamento');
+    }
+}
+
 exports.listarBensLevantamento = async (req, res) => {
     try {
         const bensLevantamento = await bemModel.listarBensLevantamento();
@@ -86,7 +83,6 @@ exports.listarBensLevantamento = async (req, res) => {
         res.status(500).send(erro);
     }
 }
-
 exports.listarLevantamento = async (req, res) => {
     try {
         const Levantamento = await bemModel.listarLevantamento();
@@ -136,6 +132,15 @@ exports.listarLocais = async (req, res) => {
     }
 }
 
+exports.criarLocal = async (req, res) => {
+    try {
+        const { nome } = req.body;
+        const local = await bemModel.criarlocal(nome);
+        res.status(201).json(local);
+    } catch (erro) {
+        res.status(500).send(erro);
+    }
+}
 
 exports.listarBensDeCategoria = async (req, res) => {
     try {
@@ -155,8 +160,8 @@ exports.listarBensDeLocal = async (req, res) => {
         res.status(200).json(listarBensDeLocais);
     } catch (erro) {
         res.status(500).send(erro);
-    }
-};
+    }
+}
 
 
 exports.listarBemDeEstado = async (req, res) => {

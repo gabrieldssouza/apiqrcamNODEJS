@@ -86,6 +86,11 @@ app.use('/listarlocal/:idLocal', router.get('/listarlocal/:idLocal', async (req,
     await bemController.listarBensDeLocal(req, res);
 }));
 
+app.use('/criarlocal', router.post('/criarlocal', async (req, res) => {
+    const bemController = require('./controllers/bemController');
+    await bemController.criarLocal(req, res);
+}));
+
 app.use('/listarEstados/:nameEstado', router.get('/listarEstados/:nameEstado', async (req, res) => {
     const bemController = require('./controllers/bemController');
     await bemController.listarBemDeEstado(req, res);
