@@ -86,10 +86,20 @@ app.use('/listarlocal/:idLocal', router.get('/listarlocal/:idLocal', async (req,
     await bemController.listarBensDeLocal(req, res);
 }));
 
+app.use('/local/:idLocal', router.get('/local/:idLocal', async (req, res) => {
+    const bemController = require('./controllers/bemController');
+    await bemController.listarLocal(req, res);
+}));
+
 app.use('/criarlocal', router.post('/criarlocal', async (req, res) => {
     const bemController = require('./controllers/bemController');
     await bemController.criarLocal(req, res);
 }));
+
+app.use('/missingTag', router.put('/missingTag', async (req, res) => {
+    const bemController = require('./controllers/bemController');
+    await bemController.missingTag(req, res);
+}))
 
 app.use('/listarEstados/:nameEstado', router.get('/listarEstados/:nameEstado', async (req, res) => {
     const bemController = require('./controllers/bemController');

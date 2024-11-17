@@ -6,7 +6,7 @@ exports.criarBem = async (req, res) => {
         console.log('Dados recebidos:', req.body);
         console.log('Arquivo recebido:', req.file);
 
-        const { nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais } = req.body;
+        const { nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, etiqueta } = req.body; 
         const foto = req.file ? req.file.filename : null;
 
         if (!nome || !codigo || !numero || !estado_conservacao || !local_idLocais || !categoria_idCategoria) {
@@ -15,9 +15,9 @@ exports.criarBem = async (req, res) => {
 
         const fotoUrl = foto ? `${req.protocol}://${req.get('host')}/uploads/${foto}` : null;
 
-        console.log('URL da foto:', fotoUrl);
+        const idbem = await bemModel.criarBem(nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, etiqueta, fotoUrl);
 
-        const idbem = await bemModel.criarBem(nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local_idLocais, fotoUrl);
+        console.log('URL da foto:', fotoUrl);
 
         let newData = {
             idbem,
@@ -29,10 +29,9 @@ exports.criarBem = async (req, res) => {
             data_aquisicao,
             categoria_idCategoria,
             local_idLocais,
+            etiqueta,
             fotoUrl
         };
-
-        console.log("FOTO:"+ foto);
 
         const qrcode = await QRCode.toDataURL(JSON.stringify(newData));
 
@@ -106,6 +105,7 @@ exports.listarBem = async (req, res) => {
 exports.editarBem = async (req, res) => {
     try {
         const { idbem, nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, responsavelMovimento, local } = req.body;
+        console.log("novo id local: "+local_idLocais+" responsavel: "+responsavelMovimento);
         const resultado = await bemModel.editarBem(idbem, nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, responsavelMovimento, local);
         res.status(200).send(resultado);
     } catch (erro) {
@@ -132,6 +132,17 @@ exports.listarLocais = async (req, res) => {
     }
 }
 
+exports.listarLocal = async (req, res) => {
+    try {
+        const { idLocal } = req.params;
+        console.log('ID Local recebido:', idLocal); // Verifique o valor de idLocal
+        const listarLocais = await bemModel.listarLocais(idLocal);
+        res.status(200).json(listarLocais);
+    } catch (erro) {
+        res.status(500).send(erro);
+    }
+}
+
 exports.criarLocal = async (req, res) => {
     try {
         const { nome } = req.body;
@@ -141,6 +152,24 @@ exports.criarLocal = async (req, res) => {
         res.status(500).send(erro);
     }
 }
+
+exports.missingTag = (req, res) => {
+   
+    const { id_bem_atual, id_bem_antigo } = req.body;
+    console.log("controler missing", id_bem_atual, id_bem_antigo)
+    
+  
+    // Chama o modelo para atualizar o bem atual e excluir o bem antigo
+    bemModel.missingTag(id_bem_atual, id_bem_antigo, (err, result) => {
+      if (err) {
+        console.error('Erro ao atualizar o bem:', err);
+        return res.status(500).send('Erro ao atualizar o bem');
+      }
+  
+      // Retorna a resposta ao cliente
+      res.status(200).send('Bem atualizado e bem antigo excluído com sucesso!');
+    });
+      };
 
 exports.listarBensDeCategoria = async (req, res) => {
     try {
@@ -162,7 +191,6 @@ exports.listarBensDeLocal = async (req, res) => {
         res.status(500).send(erro);
     }
 }
-
 
 exports.listarBemDeEstado = async (req, res) => {
     try {

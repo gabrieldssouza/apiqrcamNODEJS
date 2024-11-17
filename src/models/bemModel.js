@@ -1,8 +1,8 @@
 const db = require('./db');
 
-async function criarBem(nome, codigo, numero, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local_idLocais, fotoUrl) {
-    const bemValues = [nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, fotoUrl];
-    const bemSql = `INSERT INTO bem (nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+async function criarBem(nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, qrcode, fotoUrl, etiqueta) {
+    const bemValues = [nome, codigo, numero, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local_idLocais, qrcode, fotoUrl, etiqueta];
+    const bemSql = `INSERT INTO bem (nome, numero, codigo, data_aquisicao, valor_aquisicao, estado_conservacao, categoria_idCategoria, local_idLocais, qrcode, foto, etiqueta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     return new Promise((resolve, reject) => {
         db.query(bemSql, bemValues, (err, results) => {
@@ -18,8 +18,36 @@ async function criarBem(nome, codigo, numero, data_aquisicao, valor_aquisicao, e
     });
 }
 
+const missingTag = (id_bem_atual, id_bem_antigo, callback) => {
+    console.log("modal missing", id_bem_atual, id_bem_antigo)
+    const query = `
+        UPDATE bem
+        SET estado_conservacao = (SELECT estado_conservacao FROM bem WHERE idbem = ?)
+        WHERE idbem = ?;
+    `;
+  
+    db.query(query, [id_bem_antigo, id_bem_atual], (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+  
+      // Exclui o bem antigo após atualizar o bem atual
+      const deleteQuery = 'DELETE FROM bem WHERE idbem = ?';
+      db.query(deleteQuery, [id_bem_antigo], (deleteErr, deleteResult) => {
+        if (deleteErr) {
+          return callback(deleteErr);
+        }
+        callback(null, deleteResult);
+      });
+    });
+  };
+
 async function listarBens() {
-    const bemSql = `SELECT * FROM bem`;
+    const bemSql = `
+        SELECT bem.*, local.nome AS local_nome
+        FROM bem
+        JOIN local ON bem.local_idLocais = local.idLocais
+        `;
 
     return new Promise((resolve, reject) => {
         db.query(bemSql, (err, results) => {
@@ -117,10 +145,11 @@ async function listarBemDeEstado(nameEstado) {
 }
 
 async function editarBem(idbem, nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, responsavelMovimento, local) {
-    const bemValues = [nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local, idbem];
+    const bemValues = [nome, codigo, numero, estado_conservacao, valor_aquisicao, data_aquisicao, categoria_idCategoria, local_idLocais, idbem];
     const movimentoValues = [new Date(), responsavelMovimento, local_idLocais, idbem];
-    const bemSql = `UPDATE bem SET nome = ?, codigo = ?, numero = ?, estado_conservacao = ?, valor_aquisicao = ?, data_aquisicao = ?, categoria_idCategoria = ?, local = ? WHERE idbem = ?`;
+    const bemSql = `UPDATE bem SET nome = ?, codigo = ?, numero = ?, estado_conservacao = ?, valor_aquisicao = ?, data_aquisicao = ?, categoria_idCategoria = ?, local_idLocais = ? WHERE idbem = ?`;
     const movimentoSql = `INSERT INTO movimento (data_hora_movimento, responsável_movimento, local_idLocais, bem_idbem) VALUES (?, ?, ?, ?)`;
+    console.log("dados do edit:" + bemValues);
 
     return new Promise((resolve, reject) => {
         db.query(bemSql, bemValues, (err) => {
@@ -233,6 +262,21 @@ async function listarBensLevantamento() {
     });
 }
 
+async function listarIDLocais(idlocal) {
+    const bemSql = 'SELECT * from local WHERE idLocais = ?';
+
+    return new Promise((resolve, reject) => {
+        db.query(bemSql, [idlocal], (err, results) => {
+            if (err) {
+                console.log(err);
+                reject('Erro ao listar bem de local');
+            }
+            resolve(results);
+        });
+    });
+}
+
 
 module.exports = { criarBem, listarBens, editarBem, listarBem, atualizarQrCode, listarBemDeEstado, listarBensDeLocais, listarBensDeCategoria, listarCategorias, criarlocal, listarLocais,  adcionarBemLevantamento, 
-    listarBensLevantamento, adcionarLevantamento, listarLevantamento};
+    listarBensLevantamento, adcionarLevantamento, listarLevantamento,
+    missingTag, listarIDLocais,  listarBensDeLocais};
